@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Choyokan Maintenance</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f5f0;
+      --surface: #ffffff;
+      --border: #e2e2dc;
+      --text: #1a1a1a;
+      --text-muted: #7a7a72;
+      --accent-daily: #4f86f7;
+      --accent-weekly: #34a853;
+      --accent-monthly: #f5a623;
+      --check-done: #d0d0c8;
+      --radius: 12px;
+    }
+
+    html, body {
+      min-height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    #app {
+      max-width: 700px;
+      margin: 0 auto;
+      padding-bottom: 40px;
+    }
+
+    /* ── Banner ── */
+    .banner {
+      background: #000000;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      padding: 14px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .banner-left {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      justify-items: center;
+    }
+
+    .banner-date {
+      font-size: 0.8rem;
+      font-weight: 400;
+      opacity: 0.9;
+    }
+
+    .banner-btn {
+      background: rgba(255, 255, 255, 0.18);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      cursor: pointer;
+      font-family: inherit;
+      min-width: 80px;
+    }
+
+    .banner-btn:active { background: rgba(255, 255, 255, 0.3); }
+
+    .banner-title {
+      flex: 1;
+      text-align: center;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .banner-notice {
+      flex: 1;
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.85;
+    }
+
+    /* ── Main ── */
+    main {
+      padding: 0 16px;
+    }
+
+    /* ── Sections ── */
+    .task-section {
+      padding: 12px 0;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .task-section:last-child {
+      border-bottom: none;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      position: sticky;
+      top: var(--banner-h, 52px);
+      z-index: 5;
+      background: var(--bg);
+      padding: 8px 0 6px;
+      margin: -8px 0 0;
+    }
+
+    .section-header h2 {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .section-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+
+    .section-header .count {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .reset-note {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* ── Task list ── */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .task-item {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.25s, background 0.15s;
+    }
+
+    .task-item:active { background: #f0edf8; }
+
+    .task-item.done {
+      opacity: 0.38;
+    }
+
+    .task-item.done .task-name {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .checkbox {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1.5px solid #bbb;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .task-item.done .checkbox {
+      background: var(--check-done);
+      border-color: var(--check-done);
+    }
+
+    .checkbox svg { display: none; }
+    .task-item.done .checkbox svg { display: block; }
+
+    .task-name {
+      font-size: 0.95rem;
+      font-weight: 500;
+      flex: 1;
+    }
+
+    /* ── Subsection header ── */
+    .subsection-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px 6px;
+      border-top: 1px solid var(--border);
+      margin-top: 8px;
+    }
+
+    .subsection-header:first-child { border-top: none; margin-top: 0; padding-bottom: 0; }
+
+    .subsection-header .sub-col-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      width: 40px;
+    }
+
+    .subsection-header .sub-col-label.right { text-align: right; }
+
+    .subsection-header .sub-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      flex: 1;
+      text-align: center;
+    }
+
+    /* ── Column header ── */
+    .col-header {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 14px 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+    }
+
+    /* ── Priority ── */
+    .priority {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      min-width: 16px;
+      text-align: right;
+    }
+
+    /* ── Completion date ── */
+    .completed-date {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    /* ── All done state ── */
+    .all-done {
+      text-align: center;
+      padding: 20px 20px 12px;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    .all-done .emoji { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+
+    /* ── Checkbox pop animation ── */
+    @keyframes checkbox-pop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.45); }
+      100% { transform: scale(1); }
+    }
+    .checkbox.pop { animation: checkbox-pop 0.22s ease; }
+
+
+    /* ── Admin overlay ── */
+    .admin-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 100;
+      overflow-y: auto;
+    }
+
+    .admin-overlay[hidden] { display: none; }
+
+    .admin-header {
+      background: #000000;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .admin-header h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .admin-close {
+      background: rgba(255, 255, 255, 0.18);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 8px;
+      padding: 10px 22px;
+      min-width: 110px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      line-height: 1;
+      font-family: inherit;
+    }
+
+    .admin-close:active { background: rgba(255, 255, 255, 0.3); }
+
+    .admin-body {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .admin-section {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .admin-right {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .admin-section > h2 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .admin-hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .admin-group-header {
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 10px 14px;
+      margin: 16px 0 8px;
+      border-radius: 8px;
+      color: #fff;
+    }
+
+    .admin-group-header:first-of-type { margin-top: 4px; }
+
+    .admin-group-header.daily,
+    .admin-group-header.weekly,
+    .admin-group-header.monthly { background: #000000; }
+
+    .admin-task-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 4px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .admin-task-priority {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
+    .priority-btn {
+      background: #f0edf8;
+      color: #5b3fa6;
+      border: 1px solid #d7cfee;
+      border-radius: 4px;
+      width: 32px;
+      height: 24px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      font-family: inherit;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .priority-btn:active:not(:disabled) { background: #e3ddf3; }
+
+    .priority-btn:disabled {
+      background: #f5f5f0;
+      color: #c0c0b8;
+      border-color: #e2e2dc;
+      cursor: default;
+    }
+
+    .admin-subgroup-header {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      padding: 10px 4px 4px;
+    }
+
+    .admin-task-row:active { background: #f0edf8; }
+    .admin-task-row:last-child { border-bottom: none; }
+
+    .admin-task-name {
+      font-size: 0.92rem;
+      flex: 1;
+    }
+
+    .admin-task-last {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      font-style: italic;
+    }
+
+    .admin-task-chevron {
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    /* ── Action sheet ── */
+    .sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .sheet-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .action-sheet {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+      z-index: 201;
+      transform: translateY(100%);
+      transition: transform 0.25s ease;
+      max-width: 700px;
+      margin: 0 auto;
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    .action-sheet.open { transform: translateY(0); }
+
+    .action-sheet-header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .action-sheet-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .action-sheet-name {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .action-sheet-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .action-sheet-options button {
+      background: #f0edf8;
+      color: #5b3fa6;
+      border: 1px solid #d7cfee;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .action-sheet-options button:active { background: #e3ddf3; }
+
+    .action-sheet-options button[disabled] {
+      background: #f0f0ea;
+      color: var(--text-muted);
+      border-color: var(--border);
+      cursor: default;
+    }
+
+    .action-sheet-options button.added {
+      background: #d4edda;
+      color: #1d6f2b;
+      border-color: #b7dfc0;
+    }
+
+    .action-sheet-options button.sheet-remove {
+      background: #fdf0f0;
+      color: #b74a4a;
+      border-color: #eccfcf;
+      margin-top: 12px;
+      justify-content: center;
+    }
+
+    .action-sheet-options button.sheet-remove:active { background: #f5dcdc; }
+
+    .action-sheet-options button.sheet-remove.armed {
+      background: #b74a4a;
+      color: #fff;
+      border-color: #b74a4a;
+    }
+
+    .action-sheet-cancel {
+      margin-top: 12px;
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 12px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .add-task-form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .add-task-form input[type="text"] {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+
+    .add-task-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .add-task-field[hidden] { display: none; }
+
+    .add-task-field-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+    }
+
+    .add-task-choices {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .add-task-choices label {
+      flex: 1;
+      min-width: 80px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      text-align: center;
+      font-size: 0.88rem;
+      cursor: pointer;
+      background: #fff;
+      user-select: none;
+      position: relative;
+    }
+
+    .add-task-choices label:has(input:checked) {
+      background: #f0edf8;
+      border-color: #5b3fa6;
+      color: #5b3fa6;
+      font-weight: 600;
+    }
+
+    .add-task-choices input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .add-task-form button[type="submit"] {
+      background: #5b3fa6;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .admin-task-adhoc {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-style: italic;
+      white-space: nowrap;
+    }
+
+    .shopping-form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .shopping-form input {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+
+    .shopping-form button {
+      background: #5b3fa6;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .shopping-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .shopping-subheader {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      padding: 14px 0 8px;
+    }
+
+    .shopping-note {
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: normal;
+      font-style: italic;
+      font-size: 0.72rem;
+      margin-left: 8px;
+    }
+
+    .shopping-catalog {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .catalog-chip {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      font-weight: 500;
+    }
+
+    .catalog-chip:active { background: #f0edf8; }
+
+    .catalog-chip.pending {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    .catalog-chip-remove {
+      background: #fdf0f0;
+      color: #b74a4a;
+      border: 1px solid #eccfcf;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .catalog-chip-remove:active { background: #f5dcdc; }
+
+    .shopping-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .shopping-item:active { background: #f0edf8; }
+
+    .shopping-item.done .shopping-name {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .shopping-item.done .checkbox {
+      background: var(--check-done);
+      border-color: var(--check-done);
+    }
+
+    .shopping-item .checkbox svg { display: none; }
+    .shopping-item.done .checkbox svg { display: block; }
+
+    .shopping-name {
+      flex: 1;
+      font-size: 0.95rem;
+    }
+
+    .shopping-remove {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.3rem;
+      cursor: pointer;
+      padding: 2px 8px;
+      line-height: 1;
+      font-family: inherit;
+    }
+
+    .shopping-empty {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      padding: 16px;
+    }
+
+    /* ── Tablet ── */
+    @media (min-width: 768px) {
+      #app { max-width: 1200px; padding-bottom: 60px; }
+
+      .banner-title { font-size: 1.3rem; }
+      .banner-date, .banner-notice { font-size: 0.85rem; }
+
+      main {
+        padding: 0 28px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
+        gap: 0 32px;
+      }
+
+      #panel-daily   { grid-column: 1; grid-row: 1; border-bottom: none; border-right: 1px solid var(--border); padding-right: 32px; }
+      #panel-weekly  { grid-column: 2; grid-row: 1; border-bottom: none; }
+      #panel-monthly { grid-column: 1 / -1; grid-row: 2; border-top: 2px solid var(--border); }
+
+      .task-section { padding: 14px 0; }
+      .section-header h2 { font-size: 1.2rem; }
+
+      .task-item { padding: 16px 18px; }
+      .task-name { font-size: 1rem; }
+
+      .admin-body {
+        max-width: 1200px;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 24px;
+      }
+
+      .admin-body > .admin-section,
+      .admin-body > .admin-right {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="banner">
+  <div class="banner-left">
+    <button class="banner-btn" id="admin-btn" aria-label="Open admin">Admin</button>
+    <span class="banner-date" id="banner-date"></span>
+  </div>
+  <div class="banner-title">Choyokan Maintenance</div>
+  <div class="banner-notice">Tap a task to mark it complete</div>
+</div>
+
+<div id="app">
+  <main>
+    <div class="task-section" id="panel-daily" style="--item-accent:var(--accent-daily)">
+      <div class="section-header">
+        <h2>Daily</h2>
+        <div class="section-meta">
+          <span class="reset-note">Resets daily</span>
+        </div>
+      </div>
+      <div class="col-header"><span>Task</span><span>Priority</span></div>
+      <div class="task-list" id="list-daily"></div>
+    </div>
+
+    <div class="task-section" id="panel-weekly" style="--item-accent:var(--accent-weekly)">
+      <div class="section-header">
+        <h2>Weekly</h2>
+        <div class="section-meta">
+          <span class="reset-note">Resets Monday</span>
+        </div>
+      </div>
+      <div class="task-list" id="list-weekly"></div>
+    </div>
+
+    <div class="task-section" id="panel-monthly" style="--item-accent:var(--accent-monthly)">
+      <div class="section-header">
+        <h2>Monthly</h2>
+        <div class="section-meta">
+          <span class="reset-note">Resets 1st of month</span>
+        </div>
+      </div>
+      <div class="col-header"><span>Task</span><span>Priority</span></div>
+      <div class="task-list" id="list-monthly"></div>
+    </div>
+  </main>
+</div>
+
+<div id="admin-overlay" class="admin-overlay" hidden>
+  <div class="admin-header">
+    <h1>Admin</h1>
+    <button class="admin-close" id="admin-close" aria-label="Back to maintenance">‹ Back</button>
+  </div>
+  <div class="admin-body">
+    <section class="admin-section">
+      <h2>Task Manager</h2>
+      <p class="admin-hint">Tap a target list to add a copy of this task. Existing copies show their last completion date.</p>
+      <div id="admin-task-list"></div>
+    </section>
+
+    <div class="admin-right">
+    <section class="admin-section">
+      <h2>Add Task</h2>
+      <form class="add-task-form" id="add-task-form">
+        <input type="text" id="add-task-name" placeholder="Task name..." autocomplete="off" />
+
+        <div class="add-task-field">
+          <span class="add-task-field-label">Category</span>
+          <div class="add-task-choices">
+            <label><input type="radio" name="new-freq" value="daily" checked><span>Daily</span></label>
+            <label><input type="radio" name="new-freq" value="weekly"><span>Weekly</span></label>
+            <label><input type="radio" name="new-freq" value="monthly"><span>Monthly</span></label>
+          </div>
+        </div>
+
+        <div class="add-task-field" id="weekly-group-picker" hidden>
+          <span class="add-task-field-label">Weekly Group</span>
+          <div class="add-task-choices">
+            <label><input type="radio" name="new-wgroup" value="weekday" checked><span>Weekday</span></label>
+            <label><input type="radio" name="new-wgroup" value="weekend"><span>Weekend</span></label>
+          </div>
+        </div>
+
+        <div class="add-task-field">
+          <span class="add-task-field-label">Type</span>
+          <div class="add-task-choices">
+            <label><input type="radio" name="new-type" value="recurring" checked><span>Recurring</span></label>
+            <label><input type="radio" name="new-type" value="adhoc"><span>Ad hoc</span></label>
+          </div>
+        </div>
+
+        <button type="submit">Add Task</button>
+      </form>
+    </section>
+
+    <section class="admin-section">
+      <h2>Shopping List</h2>
+      <form class="shopping-form" id="shopping-form">
+        <input type="text" id="shopping-input" placeholder="Add an item..." autocomplete="off" />
+        <button type="submit">Add</button>
+      </form>
+      <div class="shopping-subheader">
+        To Purchase:
+        <span class="shopping-note">Crossed-out items clear each day</span>
+      </div>
+      <div class="shopping-list" id="shopping-list"></div>
+      <div class="shopping-subheader">Tap to Add</div>
+      <div class="shopping-catalog" id="shopping-catalog"></div>
+    </section>
+    </div>
+  </div>
+
+  <div class="sheet-backdrop" id="sheet-backdrop"></div>
+  <div class="action-sheet" id="action-sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-name">
+    <div class="action-sheet-header">
+      <div class="action-sheet-label">Manage task</div>
+      <div class="action-sheet-name" id="sheet-name"></div>
+    </div>
+    <div class="action-sheet-options" id="sheet-options"></div>
+    <button class="action-sheet-cancel" id="sheet-cancel">Cancel</button>
+  </div>
+</div>
+
+<script>
+const STORAGE_VERSION = '42';
+
+const DEFAULTS = {
+  daily: [
+    { name: "Mop Dojo Wood Floor — no more than 3–4 people", priority: 1 },
+    { name: "Vacuum Entry Carpet & Tatami Mats", priority: 2 },
+    { name: "Check to Wash Bath Towels — wash if full load, or before/after event", priority: 3 },
+    { name: "Check to Fold Dry Bath Towels", priority: 5 },
+    { name: "Check to Wash Mop Covers & Spin Mops — wash only if fewer than 3 clean mops before next keiko", priority: 4 },
+    { name: "Sweep Dojo Floor Perimeter for hair/debris — as needed", priority: 6 },
+  ],
+  weekly: [
+    { name: "Sweep Concrete Floor — edges & along walls", priority: 2, group: 'weekday' },
+    { name: "Empty 6 Trash Cans — include Fitness Bathrooms", priority: 1, group: 'weekday' },
+    { name: "Refill Toilet Paper & C-Fold Towels — include Fitness Bathroom", priority: 3, group: 'weekday' },
+    { name: "Mop: concrete floor → both bathroom floors → toilets (women's first)", priority: 1, group: 'weekend' },
+    { name: "Weed Rock Garden", priority: 2, group: 'weekend' },
+    { name: "Handwash Mop Sponges w/ dish soap in a bucket / wash Drip Tray", priority: 3, group: 'weekend' },
+    { name: "Clean Tatami Mats w/ Vinegar Solution", priority: 4, group: 'weekday' },
+  ],
+  monthly: [
+    { name: "Rake Rock Garden", priority: 4 },
+    { name: "Clean Entryway Glass", priority: 3 },
+    { name: "Wipe Down All Sinks / Counters", priority: 5 },
+    { name: "Clean Toilets", priority: 1 },
+    { name: "Refill All Dispensers (Hand Soap / Bath Soap / Shampoo / Conditioner)", priority: 2 },
+    { name: "Clean Dojo Mirrors / Window Sills", priority: 6 },
+    { name: "Clean Water Fountain", priority: 10 },
+    { name: "Wipe Down Kitchen Cabinets", priority: 7 },
+    { name: "Wipe Down Cabinets on Dojo Side", priority: 8 },
+    { name: "Wipe Down Cabinets on Door Entry Side — including inside of shoe rack", priority: 9 },
+  ],
+};
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+function todayKey()  { return new Date().toISOString().slice(0, 10); }
+function weekKey()   { const d = new Date(); const jan1 = new Date(d.getFullYear(), 0, 1); return `${d.getFullYear()}-W${Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7)}`; }
+function monthKey()  { const d = new Date(); return `${d.getFullYear()}-${d.getMonth()}`; }
+
+function periodKey(freq) {
+  if (freq === 'daily')   return todayKey();
+  if (freq === 'weekly')  return weekKey();
+  if (freq === 'monthly') return monthKey();
+}
+
+function load() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('dojo') || '{}');
+    if (raw._version !== STORAGE_VERSION) {
+      localStorage.removeItem('dojo');
+      return {};
+    }
+    return raw;
+  } catch { return {}; }
+}
+
+function save(data) {
+  data._version = STORAGE_VERSION;
+  localStorage.setItem('dojo', JSON.stringify(data));
+}
+
+function getState(freq) {
+  const data = load();
+  const key  = periodKey(freq);
+  if (!data[freq] || data[freq].periodKey !== key) {
+    const existing = data[freq]?.tasks;
+    const tasks = existing
+      ? existing.filter(t => !t.adhoc).map(t => ({ ...t, done: false }))
+      : DEFAULTS[freq].map(t => {
+          const isObj = typeof t === 'object';
+          return { id: uid(), name: isObj ? t.name : t, priority: isObj ? t.priority : null, group: isObj ? (t.group ?? null) : null, done: false };
+        });
+    const next = { periodKey: key, tasks };
+    data[freq] = next;
+    save(data);
+    return next;
+  }
+  return data[freq];
+}
+
+function setState(freq, state) {
+  const data = load();
+  data[freq] = state;
+  save(data);
+}
+
+function renderTask(task, list, accent, freq) {
+  const item = document.createElement('div');
+  item.className = 'task-item' + (task.done ? ' done' : '');
+  item.setAttribute('role', 'checkbox');
+  item.setAttribute('aria-checked', String(task.done));
+  item.setAttribute('tabindex', '0');
+  item.setAttribute('data-id', task.id);
+  item.style.setProperty('--item-accent', accent);
+
+  const dupeLast = isDuplicate(task.name) ? lastCompletedAcross(task.name) : null;
+  let dateLabel = '';
+  if (dupeLast) {
+    dateLabel = `<span class="completed-date">Last: ${fmtDate(dupeLast)}</span>`;
+  } else if (freq !== 'daily' && task.done && task.completedAt) {
+    dateLabel = `<span class="completed-date">${fmtDate(task.completedAt)}</span>`;
+  }
+
+  item.innerHTML = `
+    <div class="checkbox" aria-hidden="true">
+      <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+        <path d="M1 5l3.5 3.5L11 1" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span class="task-name">${escHtml(task.name)}</span>
+    ${dateLabel}
+    ${task.priority != null ? `<span class="priority">${task.priority}</span>` : ''}
+  `;
+  item.addEventListener('click', () => toggleTask(freq, task.id));
+  item.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') toggleTask(freq, task.id); });
+  list.appendChild(item);
+}
+
+function render(freq) {
+  const state = getState(freq);
+  const tasks = state.tasks;
+  const done  = tasks.filter(t => t.done).length;
+  const total = tasks.length;
+  const pct   = total ? Math.round((done / total) * 100) : 0;
+
+
+  const list = document.getElementById(`list-${freq}`);
+  list.innerHTML = '';
+
+  if (total === 0) {
+    list.innerHTML = `<div class="all-done"><span class="emoji">✨</span>No tasks yet.</div>`;
+    return;
+  }
+
+  if (done === total) {
+    const el = document.createElement('div');
+    el.className = 'all-done';
+    el.innerHTML = `<span class="emoji">🎉</span>All done! Great work.`;
+    list.appendChild(el);
+  }
+
+  const accentVar = freq === 'daily' ? '--accent-daily' : freq === 'weekly' ? '--accent-weekly' : '--accent-monthly';
+  const accent = getComputedStyle(document.documentElement).getPropertyValue(accentVar).trim();
+
+  const sorted = [...tasks].sort((a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    if (a.priority == null && b.priority == null) return 0;
+    if (a.priority == null) return 1;
+    if (b.priority == null) return -1;
+    return a.priority - b.priority;
+  });
+
+  const hasGroups = sorted.some(t => t.group);
+
+  if (hasGroups) {
+    const groups = [
+      { key: 'weekday', label: 'Weekday' },
+      { key: 'weekend', label: 'Weekend' },
+    ];
+    groups.forEach(({ key, label }) => {
+      const groupTasks = sorted.filter(t => t.group === key);
+      if (!groupTasks.length) return;
+      const header = document.createElement('div');
+      header.className = 'subsection-header';
+      header.innerHTML = `
+        <span class="sub-col-label">Task</span>
+        <span class="sub-title">${label}</span>
+        <span class="sub-col-label right">Priority</span>
+      `;
+      list.appendChild(header);
+      groupTasks.forEach(task => renderTask(task, list, accent, freq));
+    });
+    return;
+  }
+
+  sorted.forEach(task => renderTask(task, list, accent, freq));
+}
+
+function renderAll() {
+  ['daily', 'weekly', 'monthly'].forEach(render);
+}
+
+let _audioCtx = null;
+function audioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _audioCtx;
+}
+
+function playCheckSound() {
+  const ctx = audioCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(880, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.08);
+  gain.gain.setValueAtTime(0.18, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.18);
+}
+
+function playAllDoneSound() {
+  const ctx = audioCtx();
+  [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    const t = ctx.currentTime + i * 0.1;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.18, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    osc.start(t);
+    osc.stop(t + 0.35);
+  });
+}
+
+function toggleTask(freq, id) {
+  const state = getState(freq);
+  const task  = state.tasks.find(t => t.id === id);
+  if (!task) return;
+  task.done = !task.done;
+  task.completedAt = task.done ? new Date().toISOString().slice(0, 10) : null;
+  setState(freq, state);
+
+  const allDone = state.tasks.every(t => t.done);
+  render(freq);
+
+  const item = document.querySelector(`[data-id="${id}"]`);
+  if (item) {
+    const cb = item.querySelector('.checkbox');
+    cb.classList.remove('pop');
+    void cb.offsetWidth;
+    cb.classList.add('pop');
+  }
+
+  if (task.done) {
+    if (allDone) playAllDoneSound();
+    else playCheckSound();
+  }
+}
+
+function fmtDate(iso) {
+  const [, m, d] = iso.split('-').map(Number);
+  return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1] + ' ' + d;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function updateHeaderDate() {
+  const opts = { weekday: 'short', month: 'short', day: 'numeric' };
+  document.getElementById('banner-date').textContent = new Date().toLocaleDateString(undefined, opts);
+  const h = document.querySelector('.banner').getBoundingClientRect().height;
+  document.documentElement.style.setProperty('--banner-h', h + 'px');
+}
+
+// ── Duplicate lookup ───────────────────────────────────
+function allTasksFlat() {
+  const data = load();
+  const out = [];
+  ['daily', 'weekly', 'monthly'].forEach(freq => {
+    const tasks = data[freq]?.tasks || [];
+    tasks.forEach(t => out.push({ freq, task: t }));
+  });
+  return out;
+}
+
+function isDuplicate(name) {
+  return allTasksFlat().filter(x => x.task.name === name).length > 1;
+}
+
+function lastCompletedAcross(name) {
+  const dates = allTasksFlat()
+    .filter(x => x.task.name === name)
+    .map(x => x.task.completedAt)
+    .filter(Boolean)
+    .sort()
+    .reverse();
+  return dates[0] || null;
+}
+
+// ── Task copy (admin) ──────────────────────────────────
+function copyTaskTo(name, targetFreq, group) {
+  const state = getState(targetFreq);
+  const exists = state.tasks.some(t => t.name === name && (group == null || t.group === group));
+  if (exists) return false;
+  const maxPriority = state.tasks.reduce((m, t) => Math.max(m, t.priority || 0), 0);
+  state.tasks.push({
+    id: uid(),
+    name,
+    priority: maxPriority + 1,
+    group: group ?? null,
+    done: false,
+    isCopy: true,
+  });
+  setState(targetFreq, state);
+  return true;
+}
+
+// ── Shopping list ──────────────────────────────────────
+function loadShopping() {
+  const data = load();
+  const today = todayKey();
+  if (data.shoppingDay !== today) {
+    data.shopping = (data.shopping || []).filter(i => !i.done);
+    data.shoppingDay = today;
+    save(data);
+  }
+  return data.shopping || [];
+}
+
+function saveShopping(items) {
+  const data = load();
+  data.shopping = items;
+  save(data);
+}
+
+function loadCatalog() {
+  return load().shoppingCatalog || [];
+}
+
+function saveCatalog(catalog) {
+  const data = load();
+  data.shoppingCatalog = catalog;
+  save(data);
+}
+
+function addToCatalog(name) {
+  const catalog = loadCatalog();
+  if (!catalog.includes(name)) {
+    catalog.push(name);
+    saveCatalog(catalog);
+  }
+}
+
+function renderCatalog() {
+  const container = document.getElementById('shopping-catalog');
+  container.innerHTML = '';
+  const catalog = loadCatalog();
+  if (!catalog.length) return;
+
+  const items = loadShopping();
+  catalog.forEach(name => {
+    const existing = items.find(i => i.name === name);
+    const isPending = existing && !existing.done;
+
+    const chip = document.createElement('div');
+    chip.className = 'catalog-chip' + (isPending ? ' pending' : '');
+    chip.innerHTML = `
+      <span>${escHtml(name)}</span>
+      <button class="catalog-chip-remove" aria-label="Remove from catalog">Remove</button>
+    `;
+    chip.addEventListener('click', e => {
+      if (e.target.closest('.catalog-chip-remove')) return;
+      const list = loadShopping();
+      const item = list.find(i => i.name === name);
+      if (item) {
+        if (item.done) { item.done = false; saveShopping(list); }
+      } else {
+        list.push({ id: uid(), name, done: false });
+        saveShopping(list);
+      }
+      renderShopping();
+      renderCatalog();
+    });
+    chip.querySelector('.catalog-chip-remove').addEventListener('click', e => {
+      e.stopPropagation();
+      saveCatalog(loadCatalog().filter(n => n !== name));
+      renderCatalog();
+    });
+    container.appendChild(chip);
+  });
+}
+
+function renderShopping() {
+  const container = document.getElementById('shopping-list');
+  container.innerHTML = '';
+  const items = loadShopping();
+  if (!items.length) {
+    container.innerHTML = `<div class="shopping-empty">No items yet. Add one above.</div>`;
+    return;
+  }
+  items.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'shopping-item' + (item.done ? ' done' : '');
+    row.innerHTML = `
+      <div class="checkbox" aria-hidden="true">
+        <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+          <path d="M1 5l3.5 3.5L11 1" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="shopping-name">${escHtml(item.name)}</span>
+      <button class="shopping-remove" aria-label="Remove item">&times;</button>
+    `;
+    row.addEventListener('click', e => {
+      if (e.target.closest('.shopping-remove')) return;
+      const list = loadShopping();
+      const i = list.find(x => x.id === item.id);
+      if (!i) return;
+      i.done = !i.done;
+      saveShopping(list);
+      renderShopping();
+    });
+    row.querySelector('.shopping-remove').addEventListener('click', e => {
+      e.stopPropagation();
+      saveShopping(loadShopping().filter(x => x.id !== item.id));
+      renderShopping();
+    });
+    container.appendChild(row);
+  });
+}
+
+// ── Admin page ─────────────────────────────────────────
+function byPriority(a, b) {
+  if (a.priority == null && b.priority == null) return 0;
+  if (a.priority == null) return 1;
+  if (b.priority == null) return -1;
+  return a.priority - b.priority;
+}
+
+function swapPriority(freq, taskId, dir, groupKey) {
+  const state = getState(freq);
+  const sortedGroup = (groupKey
+    ? state.tasks.filter(t => t.group === groupKey)
+    : [...state.tasks]
+  ).sort(byPriority);
+  const idx = sortedGroup.findIndex(t => t.id === taskId);
+  if (idx < 0) return;
+  const swapIdx = dir === 'up' ? idx - 1 : idx + 1;
+  if (swapIdx < 0 || swapIdx >= sortedGroup.length) return;
+  const a = state.tasks.find(t => t.id === sortedGroup[idx].id);
+  const b = state.tasks.find(t => t.id === sortedGroup[swapIdx].id);
+  const tmp = a.priority;
+  a.priority = b.priority;
+  b.priority = tmp;
+  setState(freq, state);
+}
+
+function renderAdminRow(container, task, freq, groupKey, isFirst, isLast) {
+  const row = document.createElement('div');
+  row.className = 'admin-task-row';
+  const dupLast = isDuplicate(task.name) ? lastCompletedAcross(task.name) : null;
+  row.innerHTML = `
+    <div class="admin-task-priority">
+      <button class="priority-btn" data-dir="up" ${isFirst ? 'disabled' : ''} aria-label="Move up">▲</button>
+      <button class="priority-btn" data-dir="down" ${isLast ? 'disabled' : ''} aria-label="Move down">▼</button>
+    </div>
+    <span class="admin-task-name">${escHtml(task.name)}</span>
+    ${task.adhoc ? `<span class="admin-task-adhoc">Ad hoc</span>` : ''}
+    ${dupLast ? `<span class="admin-task-last">Last: ${fmtDate(dupLast)}</span>` : ''}
+    <span class="admin-task-chevron" aria-hidden="true">›</span>
+  `;
+  row.querySelectorAll('.priority-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      if (btn.disabled) return;
+      swapPriority(freq, task.id, btn.dataset.dir, groupKey);
+      renderAdminTasks();
+      renderAll();
+    });
+  });
+  row.addEventListener('click', () => openActionSheet(task, freq));
+  container.appendChild(row);
+}
+
+function renderAdminTasks() {
+  const container = document.getElementById('admin-task-list');
+  container.innerHTML = '';
+  ['daily', 'weekly', 'monthly'].forEach(freq => {
+    const state = getState(freq);
+    const tasks = state.tasks;
+    if (!tasks.length) return;
+    const header = document.createElement('div');
+    header.className = `admin-group-header ${freq}`;
+    header.textContent = freq[0].toUpperCase() + freq.slice(1);
+    container.appendChild(header);
+
+    if (freq === 'weekly') {
+      [{ key: 'weekday', label: 'Weekday' }, { key: 'weekend', label: 'Weekend' }].forEach(({ key, label }) => {
+        const groupTasks = tasks.filter(t => t.group === key).sort(byPriority);
+        if (!groupTasks.length) return;
+        const sub = document.createElement('div');
+        sub.className = 'admin-subgroup-header';
+        sub.textContent = label;
+        container.appendChild(sub);
+        groupTasks.forEach((task, i) => {
+          renderAdminRow(container, task, freq, key, i === 0, i === groupTasks.length - 1);
+        });
+      });
+    } else {
+      const sorted = [...tasks].sort(byPriority);
+      sorted.forEach((task, i) => {
+        renderAdminRow(container, task, freq, null, i === 0, i === sorted.length - 1);
+      });
+    }
+  });
+}
+
+// ── Action sheet ───────────────────────────────────────
+const SHEET_TARGETS = [
+  { freq: 'daily',  group: null,      label: 'Add to Daily' },
+  { freq: 'weekly', group: 'weekday', label: 'Add to Weekly (Weekday)' },
+  { freq: 'weekly', group: 'weekend', label: 'Add to Weekly (Weekend)' },
+];
+
+function openActionSheet(task, sourceFreq) {
+  document.getElementById('sheet-name').textContent = task.name;
+
+  const opts = document.getElementById('sheet-options');
+  opts.innerHTML = '';
+
+  SHEET_TARGETS.forEach(t => {
+    const tasksInTarget = load()[t.freq]?.tasks || [];
+    const exists = tasksInTarget.some(x => x.name === task.name && (t.group == null || x.group === t.group));
+    const btn = document.createElement('button');
+    btn.innerHTML = `<span>${t.label}</span>${exists ? '<span>Already there</span>' : ''}`;
+    if (exists) btn.disabled = true;
+    btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      copyTaskTo(task.name, t.freq, t.group);
+      btn.classList.add('added');
+      btn.innerHTML = `<span>${t.label}</span><span>✓ Added</span>`;
+      btn.disabled = true;
+      setTimeout(() => { closeActionSheet(); renderAdminTasks(); renderAll(); }, 450);
+    });
+    opts.appendChild(btn);
+  });
+
+  if (task.isCopy) {
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'sheet-remove';
+    const sourceLabel = sourceFreq[0].toUpperCase() + sourceFreq.slice(1);
+    removeBtn.textContent = `Remove from ${sourceLabel}`;
+    let armed = false;
+    removeBtn.addEventListener('click', () => {
+      if (!armed) {
+        armed = true;
+        removeBtn.classList.add('armed');
+        removeBtn.textContent = 'Tap again to confirm';
+        return;
+      }
+      const state = getState(sourceFreq);
+      state.tasks = state.tasks.filter(t => t.id !== task.id);
+      setState(sourceFreq, state);
+      closeActionSheet();
+      renderAdminTasks();
+      renderAll();
+    });
+    opts.appendChild(removeBtn);
+  }
+
+  document.getElementById('sheet-backdrop').classList.add('open');
+  document.getElementById('action-sheet').classList.add('open');
+}
+
+function closeActionSheet() {
+  document.getElementById('action-sheet').classList.remove('open');
+  document.getElementById('sheet-backdrop').classList.remove('open');
+}
+
+document.getElementById('sheet-cancel').addEventListener('click', closeActionSheet);
+document.getElementById('sheet-backdrop').addEventListener('click', closeActionSheet);
+
+// ── Add task (admin) ───────────────────────────────────
+document.querySelectorAll('input[name="new-freq"]').forEach(r => {
+  r.addEventListener('change', () => {
+    const sel = document.querySelector('input[name="new-freq"]:checked').value;
+    document.getElementById('weekly-group-picker').hidden = sel !== 'weekly';
+  });
+});
+
+document.getElementById('add-task-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const nameInput = document.getElementById('add-task-name');
+  const name = nameInput.value.trim();
+  if (!name) return;
+  const freq = document.querySelector('input[name="new-freq"]:checked').value;
+  const type = document.querySelector('input[name="new-type"]:checked').value;
+  const group = freq === 'weekly'
+    ? document.querySelector('input[name="new-wgroup"]:checked').value
+    : null;
+
+  const state = getState(freq);
+  const maxPriority = state.tasks.reduce((m, t) => Math.max(m, t.priority || 0), 0);
+  state.tasks.push({
+    id: uid(),
+    name,
+    priority: maxPriority + 1,
+    group,
+    done: false,
+    adhoc: type === 'adhoc',
+    isCopy: true,
+  });
+  setState(freq, state);
+
+  nameInput.value = '';
+  renderAdminTasks();
+  renderAll();
+});
+
+function openAdmin() {
+  document.getElementById('admin-overlay').hidden = false;
+  renderAdminTasks();
+  renderShopping();
+  renderCatalog();
+}
+
+function closeAdmin() {
+  document.getElementById('admin-overlay').hidden = true;
+}
+
+document.getElementById('admin-btn').addEventListener('click', openAdmin);
+document.getElementById('admin-close').addEventListener('click', closeAdmin);
+document.getElementById('shopping-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const input = document.getElementById('shopping-input');
+  const name = input.value.trim();
+  if (!name) return;
+  const items = loadShopping();
+  if (!items.some(i => i.name === name)) {
+    items.push({ id: uid(), name, done: false });
+    saveShopping(items);
+  }
+  addToCatalog(name);
+  input.value = '';
+  renderShopping();
+  renderCatalog();
+});
+
+// ── Service worker ─────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/Dojo-Maintenance/sw.js');
+}
+
+updateHeaderDate();
+renderAll();
+setInterval(renderAll, 60_000);
+</script>
+</body>
+</html>
