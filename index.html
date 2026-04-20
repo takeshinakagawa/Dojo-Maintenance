@@ -847,7 +847,7 @@
 <body>
 <div class="banner">
   <div class="banner-left">
-    <button class="banner-btn" id="admin-btn" aria-label="Open admin">Admin</button>
+    <button class="banner-btn" id="admin-btn" aria-label="Open admin" onclick="openAdmin()">Admin</button>
     <span class="banner-date" id="banner-date"></span>
   </div>
   <div class="banner-title">Choyokan Maintenance</div>
@@ -893,7 +893,7 @@
 <div id="admin-overlay" class="admin-overlay" hidden>
   <div class="admin-header">
     <h1>Admin</h1>
-    <button class="admin-close" id="admin-close" aria-label="Back to maintenance">‹ Back</button>
+    <button class="admin-close" id="admin-close" aria-label="Back to maintenance" onclick="closeAdmin()">‹ Back</button>
   </div>
   <div class="admin-body">
     <section class="admin-section">
