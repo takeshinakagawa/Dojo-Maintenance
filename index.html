@@ -814,14 +814,13 @@
       main {
         padding: 0 28px;
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: auto auto;
+        grid-template-columns: 1fr 1fr 1fr;
         gap: 0 32px;
       }
 
-      #panel-daily   { grid-column: 1; grid-row: 1; border-bottom: none; border-right: 1px solid var(--border); padding-right: 32px; }
-      #panel-weekly  { grid-column: 2; grid-row: 1; border-bottom: none; }
-      #panel-monthly { grid-column: 1 / -1; grid-row: 2; border-top: 2px solid var(--border); }
+      #panel-daily   { border-bottom: none; border-right: 1px solid var(--border); padding-right: 32px; }
+      #panel-weekly  { border-bottom: none; border-right: 1px solid var(--border); padding-right: 32px; }
+      #panel-monthly { border-bottom: none; }
 
       .task-section { padding: 14px 0; }
       .section-header h2 { font-size: 1.2rem; }
@@ -1004,7 +1003,10 @@ function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
-function todayKey()  { return new Date().toISOString().slice(0, 10); }
+function localDateKey(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function todayKey()  { return localDateKey(); }
 function weekKey()   { const d = new Date(); const jan1 = new Date(d.getFullYear(), 0, 1); return `${d.getFullYear()}-W${Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7)}`; }
 function monthKey()  { const d = new Date(); return `${d.getFullYear()}-${d.getMonth()}`; }
 
@@ -1195,7 +1197,7 @@ function toggleTask(freq, id) {
   const task  = state.tasks.find(t => t.id === id);
   if (!task) return;
   task.done = !task.done;
-  task.completedAt = task.done ? new Date().toISOString().slice(0, 10) : null;
+  task.completedAt = task.done ? localDateKey() : null;
   setState(freq, state);
 
   const allDone = state.tasks.every(t => t.done);
