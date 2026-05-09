@@ -374,7 +374,26 @@
       margin: 16px 0 8px;
       border-radius: 8px;
       color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
+
+    .admin-reset-btn {
+      background: rgba(255, 255, 255, 0.18);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 6px;
+      padding: 5px 11px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .admin-reset-btn:active { background: rgba(255, 255, 255, 0.3); }
 
     .admin-group-header:first-of-type { margin-top: 4px; }
 
@@ -874,7 +893,7 @@
       <div class="section-header">
         <h2>Daily</h2>
         <div class="section-meta">
-          <span class="reset-note">Resets daily</span>
+          <span class="reset-note" id="last-reset-daily">Loading…</span>
         </div>
       </div>
       <div class="col-header"><span>Task</span><span>Priority</span></div>
@@ -885,7 +904,7 @@
       <div class="section-header">
         <h2>Weekly</h2>
         <div class="section-meta">
-          <span class="reset-note">Resets Monday</span>
+          <span class="reset-note" id="last-reset-weekly">Loading…</span>
         </div>
       </div>
       <div class="task-list" id="list-weekly"></div>
@@ -895,7 +914,7 @@
       <div class="section-header">
         <h2>Monthly</h2>
         <div class="section-meta">
-          <span class="reset-note">Resets 1st of month</span>
+          <span class="reset-note" id="last-reset-monthly">Loading…</span>
         </div>
       </div>
       <div class="col-header"><span>Task</span><span>Priority</span></div>
@@ -1052,6 +1071,23 @@ function periodKey(freq) {
   if (freq === 'monthly') return monthKey();
 }
 
+function formatPeriodKey(freq, key) {
+  if (!key) return '—';
+  if (freq === 'daily' || freq === 'weekly') {
+    const [y, m, d] = key.split('-').map(Number);
+    if (!y || !m || !d) return key;
+    const date = new Date(y, m - 1, d);
+    return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  }
+  if (freq === 'monthly') {
+    const [y, m] = key.split('-').map(Number);
+    if (Number.isNaN(y) || Number.isNaN(m)) return key;
+    const date = new Date(y, m, 1);
+    return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  }
+  return key;
+}
+
 const MIGRATIONS = {
   '42': (data) => {
     const mapNum = p => typeof p === 'number' ? (p <= 3 ? 'high' : p <= 7 ? 'med' : 'low') : p;
@@ -1151,6 +1187,8 @@ function render(freq) {
   const total = tasks.length;
   const pct   = total ? Math.round((done / total) * 100) : 0;
 
+  const lastResetEl = document.getElementById(`last-reset-${freq}`);
+  if (lastResetEl) lastResetEl.textContent = `Last reset: ${formatPeriodKey(freq, state.periodKey)}`;
 
   const list = document.getElementById(`list-${freq}`);
   list.innerHTML = '';
@@ -1491,6 +1529,18 @@ function renderAdminRow(container, task, freq, groupKey, isFirst, isLast) {
   container.appendChild(row);
 }
 
+function manualReset(freq) {
+  const label = freq[0].toUpperCase() + freq.slice(1);
+  if (!confirm(`Reset all ${label} tasks now? Marks them all undone.`)) return;
+  const data = load();
+  if (data[freq]) {
+    data[freq].periodKey = '__manual_reset__';
+    save(data);
+  }
+  renderAdminTasks();
+  renderAll();
+}
+
 function renderAdminTasks() {
   const container = document.getElementById('admin-task-list');
   container.innerHTML = '';
@@ -1500,7 +1550,11 @@ function renderAdminTasks() {
     if (!tasks.length) return;
     const header = document.createElement('div');
     header.className = `admin-group-header ${freq}`;
-    header.textContent = freq[0].toUpperCase() + freq.slice(1);
+    header.innerHTML = `
+      <span>${freq[0].toUpperCase() + freq.slice(1)}</span>
+      <button class="admin-reset-btn" type="button">Reset now</button>
+    `;
+    header.querySelector('.admin-reset-btn').addEventListener('click', () => manualReset(freq));
     container.appendChild(header);
 
     const renderList = (list, groupKey) => {
@@ -1728,6 +1782,20 @@ if ('serviceWorker' in navigator) {
 updateHeaderDate();
 renderAll();
 setInterval(renderAll, 60_000);
+
+function msUntilNextLocalMidnight() {
+  const now = new Date();
+  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1, 0);
+  return next - now;
+}
+function scheduleBoundaryRender() {
+  setTimeout(() => {
+    updateHeaderDate();
+    renderAll();
+    scheduleBoundaryRender();
+  }, msUntilNextLocalMidnight());
+}
+scheduleBoundaryRender();
 
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) { updateHeaderDate(); renderAll(); }
