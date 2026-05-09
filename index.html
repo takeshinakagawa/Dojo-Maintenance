@@ -1038,7 +1038,12 @@ function localDateKey(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 function todayKey()  { return localDateKey(); }
-function weekKey()   { const d = new Date(); const jan1 = new Date(d.getFullYear(), 0, 1); return `${d.getFullYear()}-W${Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7)}`; }
+function weekKey()   {
+  const d = new Date();
+  const dow = (d.getDay() + 6) % 7; // 0 = Mon, 6 = Sun
+  const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - dow);
+  return localDateKey(monday);
+}
 function monthKey()  { const d = new Date(); return `${d.getFullYear()}-${d.getMonth()}`; }
 
 function periodKey(freq) {
@@ -1723,6 +1728,11 @@ if ('serviceWorker' in navigator) {
 updateHeaderDate();
 renderAll();
 setInterval(renderAll, 60_000);
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) { updateHeaderDate(); renderAll(); }
+});
+window.addEventListener('pageshow', () => { updateHeaderDate(); renderAll(); });
 </script>
 </body>
 </html>
