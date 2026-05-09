@@ -126,28 +126,9 @@
 
     .section-header h2 {
       font-size: 1rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .section-meta {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 2px;
-    }
-
-    .section-header .count {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-    }
-
-    .reset-note {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      font-style: italic;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.2px;
     }
 
     /* ── Task list ── */
@@ -891,10 +872,7 @@
   <main>
     <div class="task-section" id="panel-daily" style="--item-accent:var(--accent-daily)">
       <div class="section-header">
-        <h2>Daily</h2>
-        <div class="section-meta">
-          <span class="reset-note" id="last-reset-daily">Loading…</span>
-        </div>
+        <h2 id="title-daily">Loading…</h2>
       </div>
       <div class="col-header"><span>Task</span><span>Priority</span></div>
       <div class="task-list" id="list-daily"></div>
@@ -902,20 +880,14 @@
 
     <div class="task-section" id="panel-weekly" style="--item-accent:var(--accent-weekly)">
       <div class="section-header">
-        <h2>Weekly</h2>
-        <div class="section-meta">
-          <span class="reset-note" id="last-reset-weekly">Loading…</span>
-        </div>
+        <h2 id="title-weekly">Loading…</h2>
       </div>
       <div class="task-list" id="list-weekly"></div>
     </div>
 
     <div class="task-section" id="panel-monthly" style="--item-accent:var(--accent-monthly)">
       <div class="section-header">
-        <h2>Monthly</h2>
-        <div class="section-meta">
-          <span class="reset-note" id="last-reset-monthly">Loading…</span>
-        </div>
+        <h2 id="title-monthly">Loading…</h2>
       </div>
       <div class="col-header"><span>Task</span><span>Priority</span></div>
       <div class="task-list" id="list-monthly"></div>
@@ -1013,14 +985,14 @@
 </div>
 
 <script>
-const STORAGE_VERSION = '43';
+const STORAGE_VERSION = '44';
 
 const DEFAULTS = {
   daily: [
+    { name: "Sweep Dojo Floor Perimeter for hair/debris — as needed", priority: 'high' },
     { name: "Mop Dojo Wood Floor — no more than 3–4 people", priority: 'high' },
     { name: "Vacuum Entry Carpet & Tatami Mats", priority: 'high' },
     { name: "Check to Fold Dry Bath Towels", priority: 'high' },
-    { name: "Sweep Dojo Floor Perimeter for hair/debris — as needed", priority: 'high' },
   ],
   weekly: [
     { name: "Empty 6 Trash Cans — include Fitness Bathrooms", priority: 'high', group: 'weekday' },
@@ -1036,6 +1008,7 @@ const DEFAULTS = {
     { name: "Refill All Dispensers (Hand Soap / Bath Soap / Shampoo / Conditioner)", priority: 'high' },
     { name: "Clean Entryway Glass", priority: 'high' },
     { name: "Rake Rock Garden", priority: 'high' },
+    { name: "Wipe down Pit Benches", priority: 'high' },
     { name: "Wipe Down All Sinks / Counters", priority: 'med' },
     { name: "Clean Dojo Mirrors / Window Sills", priority: 'med' },
     { name: "Wipe Down Kitchen Cabinets", priority: 'med' },
@@ -1071,13 +1044,20 @@ function periodKey(freq) {
   if (freq === 'monthly') return monthKey();
 }
 
-function formatPeriodKey(freq, key) {
+function formatPeriodTitle(freq, key) {
   if (!key) return '—';
-  if (freq === 'daily' || freq === 'weekly') {
+  if (freq === 'daily') {
     const [y, m, d] = key.split('-').map(Number);
     if (!y || !m || !d) return key;
     const date = new Date(y, m - 1, d);
-    return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    return date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  }
+  if (freq === 'weekly') {
+    const [y, m, d] = key.split('-').map(Number);
+    if (!y || !m || !d) return key;
+    const date = new Date(y, m - 1, d);
+    const formatted = date.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+    return `Week of ${formatted}`;
   }
   if (freq === 'monthly') {
     const [y, m] = key.split('-').map(Number);
@@ -1095,6 +1075,31 @@ const MIGRATIONS = {
       if (data[freq]?.tasks) data[freq].tasks.forEach(t => { t.priority = mapNum(t.priority); });
     }
     data._version = '43';
+    return data;
+  },
+  '43': (data) => {
+    if (data.monthly?.tasks) {
+      const exists = data.monthly.tasks.some(t => t.name === 'Wipe down Pit Benches');
+      if (!exists) {
+        data.monthly.tasks.push({
+          id: uid(),
+          name: 'Wipe down Pit Benches',
+          priority: 'high',
+          group: null,
+          done: false,
+        });
+      }
+    }
+    if (data.daily?.tasks) {
+      const idx = data.daily.tasks.findIndex(t =>
+        typeof t.name === 'string' && t.name.startsWith('Sweep Dojo Floor Perimeter')
+      );
+      if (idx > 0) {
+        const [task] = data.daily.tasks.splice(idx, 1);
+        data.daily.tasks.unshift(task);
+      }
+    }
+    data._version = '44';
     return data;
   },
 };
@@ -1187,8 +1192,8 @@ function render(freq) {
   const total = tasks.length;
   const pct   = total ? Math.round((done / total) * 100) : 0;
 
-  const lastResetEl = document.getElementById(`last-reset-${freq}`);
-  if (lastResetEl) lastResetEl.textContent = `Last reset: ${formatPeriodKey(freq, state.periodKey)}`;
+  const titleEl = document.getElementById(`title-${freq}`);
+  if (titleEl) titleEl.textContent = formatPeriodTitle(freq, state.periodKey);
 
   const list = document.getElementById(`list-${freq}`);
   list.innerHTML = '';
