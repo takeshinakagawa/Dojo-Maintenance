@@ -1,4 +1,4 @@
-const CACHE = 'choyokan-v21';
+const CACHE = 'choyokan-v22';
 const ASSETS = [
   '/Dojo-Maintenance/',
   '/Dojo-Maintenance/index.html',

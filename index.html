@@ -1016,7 +1016,7 @@
 </div>
 
 <script>
-const STORAGE_VERSION = '48';
+const STORAGE_VERSION = '49';
 
 const DEFAULTS = {
   daily: [
@@ -1260,6 +1260,20 @@ const MIGRATIONS = {
       });
     }
     data._version = '48';
+    return data;
+  },
+  '48': (data) => {
+    for (const freq of ['weekly', 'monthly']) {
+      if (!data[freq]?.tasks) continue;
+      const defaultMap = {};
+      for (const d of DEFAULTS[freq]) {
+        if (typeof d === 'object' && d.dueDay != null) defaultMap[d.name] = d.dueDay;
+      }
+      data[freq].tasks.forEach(t => {
+        if (t.dueDay == null && defaultMap[t.name] != null) t.dueDay = defaultMap[t.name];
+      });
+    }
+    data._version = '49';
     return data;
   },
 };
