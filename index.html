@@ -104,7 +104,7 @@
 
     /* ── Sections ── */
     .task-section {
-      padding: 12px 0;
+      padding: 8px 0;
       border-bottom: 2px solid var(--border);
     }
 
@@ -135,7 +135,7 @@
     .task-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 5px;
     }
 
     .task-item {
@@ -144,8 +144,8 @@
       border-radius: 10px;
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px 14px;
+      gap: 10px;
+      padding: 8px 12px;
       cursor: pointer;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
@@ -176,9 +176,9 @@
     }
 
     .task-name {
-      font-size: 1.1rem;
+      font-size: 0.95rem;
       font-weight: 500;
-      line-height: 1.3;
+      line-height: 1.25;
       flex: 1;
     }
 
@@ -219,7 +219,7 @@
     .col-header {
       display: flex;
       justify-content: space-between;
-      padding: 12px 14px 8px;
+      padding: 6px 14px 4px;
       font-size: 0.7rem;
       font-weight: 700;
       text-transform: uppercase;
@@ -227,24 +227,61 @@
       color: var(--text-muted);
     }
 
-    /* ── Priority ── */
-    .priority {
-      font-size: 0.72rem;
+    /* ── Due-day badge ── */
+    .due {
+      font-size: 0.8rem;
       color: var(--text-muted);
       flex-shrink: 0;
       text-align: right;
+      font-weight: 700;
+      white-space: nowrap;
     }
+    .due.today    { color: #1d6f2b; }
+    .due.pastdue  { color: #b03434; }
 
-    /* ── Priority picker in action sheet ── */
-    .priority-picker {
+    /* ── Due-day picker in action sheet ── */
+    .dueday-picker {
       display: flex;
+      flex-wrap: wrap;
       gap: 5px;
       margin-bottom: 11px;
     }
-    .priority-picker button {
-      flex: 1;
+    .dueday-picker button {
+      flex: 1 0 calc(25% - 5px);
       padding: 9px 7px;
-      font-size: 0.69rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .dueday-picker button.selected {
+      background: #f0edf8;
+      color: #5b3fa6;
+      border-color: #5b3fa6;
+    }
+    .dueday-month-input {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 11px;
+    }
+    .dueday-month-input input[type="number"] {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+    .dueday-month-input button {
+      padding: 10px 14px;
+      font-size: 0.78rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -255,10 +292,11 @@
       cursor: pointer;
       font-family: inherit;
     }
-    .priority-picker button.selected[data-pri="high"] { background: #fde4e4; color: #b03434; border-color: #f5c7c7; }
-    .priority-picker button.selected[data-pri="med"]  { background: #fdf1d6; color: #8a5a11; border-color: #f1deae; }
-    .priority-picker button.selected[data-pri="low"]  { background: #eceff2; color: #5a6472; border-color: #d6dae0; }
-    .priority-picker button.selected[data-pri="none"] { background: #f0edf8; color: #5b3fa6; border-color: #d7cfee; }
+    .dueday-month-input button.selected {
+      background: #f0edf8;
+      color: #5b3fa6;
+      border-color: #5b3fa6;
+    }
 
     /* ── Completion date ── */
     .completed-date {
@@ -837,11 +875,11 @@
       #panel-weekly  { border-bottom: none; border-right: 1px solid var(--border); padding-right: 32px; }
       #panel-monthly { border-bottom: none; }
 
-      .task-section { padding: 14px 0; }
+      .task-section { padding: 10px 0; }
       .section-header h2 { font-size: 1.2rem; }
 
-      .task-item { padding: 16px 18px; }
-      .task-name { font-size: 1.3rem; }
+      .task-item { padding: 10px 14px; }
+      .task-name { font-size: 1.05rem; }
 
       .admin-body {
         max-width: 1200px;
@@ -874,7 +912,7 @@
       <div class="section-header">
         <h2 id="title-daily">Loading…</h2>
       </div>
-      <div class="col-header"><span>Task</span><span>Priority</span></div>
+      <div class="col-header"><span>Daily Tasks</span><span>Due</span></div>
       <div class="task-list" id="list-daily"></div>
     </div>
 
@@ -882,6 +920,7 @@
       <div class="section-header">
         <h2 id="title-weekly">Loading…</h2>
       </div>
+      <div class="col-header"><span>Weekly Tasks</span><span>Due</span></div>
       <div class="task-list" id="list-weekly"></div>
     </div>
 
@@ -889,7 +928,7 @@
       <div class="section-header">
         <h2 id="title-monthly">Loading…</h2>
       </div>
-      <div class="col-header"><span>Task</span><span>Priority</span></div>
+      <div class="col-header"><span>Monthly Tasks</span><span>Due</span></div>
       <div class="task-list" id="list-monthly"></div>
     </div>
   </main>
@@ -923,14 +962,6 @@
             <label><input type="radio" name="new-freq" value="daily" checked><span>Daily</span></label>
             <label><input type="radio" name="new-freq" value="weekly"><span>Weekly</span></label>
             <label><input type="radio" name="new-freq" value="monthly"><span>Monthly</span></label>
-          </div>
-        </div>
-
-        <div class="add-task-field" id="weekly-group-picker" hidden>
-          <span class="add-task-field-label">Weekly Group</span>
-          <div class="add-task-choices">
-            <label><input type="radio" name="new-wgroup" value="weekday" checked><span>Weekday</span></label>
-            <label><input type="radio" name="new-wgroup" value="weekend"><span>Weekend</span></label>
           </div>
         </div>
 
@@ -985,42 +1016,87 @@
 </div>
 
 <script>
-const STORAGE_VERSION = '44';
+const STORAGE_VERSION = '48';
 
 const DEFAULTS = {
   daily: [
-    { name: "Sweep Dojo Floor Perimeter for hair/debris — as needed", priority: 'high' },
-    { name: "Mop Dojo Wood Floor — no more than 3–4 people", priority: 'high' },
-    { name: "Vacuum Entry Carpet & Tatami Mats", priority: 'high' },
-    { name: "Check to Fold Dry Bath Towels", priority: 'high' },
+    { name: "Mop Dojo Wood Floor — no more than 3–4 people" },
+    { name: "Vacuum Entry Carpet & Tatami Mats" },
+    { name: "Check to Fold Dry Bath Towels" },
   ],
   weekly: [
-    { name: "Empty 6 Trash Cans — include Fitness Bathrooms", priority: 'high', group: 'weekday' },
-    { name: "Sweep Concrete Floor — edges & along walls", priority: 'high', group: 'weekday' },
-    { name: "Refill Toilet Paper & C-Fold Towels — include Fitness Bathroom", priority: 'high', group: 'weekday' },
-    { name: "Clean Tatami Mats w/ Vinegar Solution", priority: 'med', group: 'weekday' },
-    { name: "Mop: concrete floor → both bathroom floors → toilets (women's first)", priority: 'high', group: 'weekend' },
-    { name: "Weed Rock Garden", priority: 'high', group: 'weekend' },
-    { name: "Handwash Mop Sponges w/ dish soap in a bucket / wash Drip Tray", priority: 'high', group: 'weekend' },
+    { name: "Sweep Dojo Floor Perimeter for hair/debris — as needed", dueDay: 2 },
+    { name: "Empty 6 Trash Cans — include Fitness Bathrooms", dueDay: 2 },
+    { name: "Sweep Concrete Floor — edges & along walls", dueDay: 2 },
+    { name: "Refill Toilet Paper & C-Fold Towels — include Fitness Bathroom", dueDay: 4 },
+    { name: "Clean Tatami Mats w/ Vinegar Solution", dueDay: 4 },
+    { name: "Mop: concrete floor → both bathroom floors → toilets (women's first)", dueDay: 6 },
+    { name: "Weed Rock Garden", dueDay: 6 },
+    { name: "Handwash Mop Sponges w/ dish soap in a bucket / wash Drip Tray", dueDay: 6 },
   ],
   monthly: [
-    { name: "Clean Toilets", priority: 'high' },
-    { name: "Refill All Dispensers (Hand Soap / Bath Soap / Shampoo / Conditioner)", priority: 'high' },
-    { name: "Clean Entryway Glass", priority: 'high' },
-    { name: "Rake Rock Garden", priority: 'high' },
-    { name: "Wipe down Pit Benches", priority: 'high' },
-    { name: "Wipe Down All Sinks / Counters", priority: 'med' },
-    { name: "Clean Dojo Mirrors / Window Sills", priority: 'med' },
-    { name: "Wipe Down Kitchen Cabinets", priority: 'med' },
-    { name: "Clean Water Fountain", priority: 'med' },
-    { name: "Wipe Down Cabinets on Dojo Side", priority: 'low' },
-    { name: "Wipe Down Cabinets on Door Entry Side — including inside of shoe rack", priority: 'low' },
+    { name: "Clean Toilets", dueDay: 'week1' },
+    { name: "Refill All Dispensers (Hand Soap / Bath Soap / Shampoo / Conditioner)", dueDay: 'week1' },
+    { name: "Clean Entryway Glass", dueDay: 'week2' },
+    { name: "Rake Rock Garden", dueDay: 'week2' },
+    { name: "Wipe down Pit Benches", dueDay: 'week3' },
+    { name: "Wipe Down All Sinks / Counters", dueDay: 'week3' },
+    { name: "Clean Dojo Mirrors / Window Sills", dueDay: 'week4' },
+    { name: "Wipe Down Kitchen Cabinets", dueDay: 'week4' },
+    { name: "Clean Water Fountain", dueDay: 'week1' },
+    { name: "Wipe Down Cabinets on Dojo Side", dueDay: 'week2' },
+    { name: "Wipe Down Cabinets on Door Entry Side — including inside of shoe rack", dueDay: 'week3' },
   ],
 };
 
-const PRIORITY_RANK = { high: 0, med: 1, low: 2 };
-const PRIORITY_LABEL = { high: 'High', med: 'Med', low: 'Low' };
-function priorityRank(p) { return PRIORITY_RANK[p] ?? 3; }
+const DOW_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function ordinal(n) {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+function daysInCurrentMonth() {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+}
+
+const MONTH_WEEKS = ['week1', 'week2', 'week3', 'week4'];
+const MONTH_WEEK_LABEL = { week1: 'Week 1', week2: 'Week 2', week3: 'Week 3', week4: 'Week 4' };
+
+function weekOfMonth(day) {
+  return MONTH_WEEKS[Math.min(3, Math.floor((day - 1) / 7))];
+}
+
+// Returns {label, status: 'today'|'pastdue'|'upcoming'|null, sortKey}
+function dueDayInfo(freq, task) {
+  if (freq === 'daily') {
+    return { label: 'Today', status: 'today', sortKey: 0 };
+  }
+  if (freq === 'weekly') {
+    const dueDow = task.dueDay;
+    if (dueDow == null) return { label: '', status: null, sortKey: 999 };
+    const now = new Date();
+    const currMon = (now.getDay() + 6) % 7;       // Mon=0..Sun=6
+    const dueMon  = (dueDow + 6) % 7;
+    if (dueMon === currMon) return { label: 'Today',    status: 'today',    sortKey: 100 };
+    if (dueMon <  currMon)  return { label: 'Past Due', status: 'pastdue',  sortKey: 0   };
+    return { label: DOW_LABELS[dueDow], status: 'upcoming', sortKey: 200 + dueMon };
+  }
+  if (freq === 'monthly') {
+    const raw = task.dueDay;
+    if (raw == null || !MONTH_WEEKS.includes(raw)) return { label: '', status: null, sortKey: 999 };
+    const today = new Date().getDate();
+    const currIdx = MONTH_WEEKS.indexOf(weekOfMonth(today));
+    const taskIdx = MONTH_WEEKS.indexOf(raw);
+    const label = MONTH_WEEK_LABEL[raw];
+    if (taskIdx <  currIdx) return { label: 'Past Due', status: 'pastdue',  sortKey: taskIdx };
+    if (taskIdx === currIdx) return { label,            status: 'today',    sortKey: 100 };
+    return { label, status: 'upcoming', sortKey: 200 + taskIdx };
+  }
+  return { label: '', status: null, sortKey: 999 };
+}
 
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -1063,7 +1139,13 @@ function formatPeriodTitle(freq, key) {
     const [y, m] = key.split('-').map(Number);
     if (Number.isNaN(y) || Number.isNaN(m)) return key;
     const date = new Date(y, m, 1);
-    return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    const monthLabel = date.toLocaleDateString(undefined, { month: 'long' });
+    const today = new Date();
+    if (today.getFullYear() === y && today.getMonth() === m) {
+      const w = Math.min(4, Math.ceil(today.getDate() / 7));
+      return `${monthLabel} - Week ${w}`;
+    }
+    return monthLabel;
   }
   return key;
 }
@@ -1100,6 +1182,84 @@ const MIGRATIONS = {
       }
     }
     data._version = '44';
+    return data;
+  },
+  '44': (data) => {
+    for (const freq of ['weekly', 'monthly']) {
+      if (data[freq]?.tasks) {
+        data[freq].tasks.forEach(t => {
+          if (!('dueDay' in t)) t.dueDay = null;
+        });
+      }
+    }
+    data._version = '45';
+    return data;
+  },
+  '45': (data) => {
+    if (data.weekly?.tasks) {
+      data.weekly.tasks.forEach(t => { t.group = null; });
+    }
+    data._version = '46';
+    return data;
+  },
+  '46': (data) => {
+    const SWEEP_PREFIX = 'Sweep Dojo Floor Perimeter';
+    const WEEKLY_DUE = {
+      'Sweep Dojo Floor Perimeter for hair/debris — as needed': 2,
+      'Empty 6 Trash Cans — include Fitness Bathrooms': 2,
+      'Sweep Concrete Floor — edges & along walls': 2,
+      'Refill Toilet Paper & C-Fold Towels — include Fitness Bathroom': 4,
+      'Clean Tatami Mats w/ Vinegar Solution': 4,
+      "Mop: concrete floor → both bathroom floors → toilets (women's first)": 6,
+      'Weed Rock Garden': 6,
+      'Handwash Mop Sponges w/ dish soap in a bucket / wash Drip Tray': 6,
+    };
+    if (data.daily?.tasks) {
+      const idx = data.daily.tasks.findIndex(t =>
+        typeof t.name === 'string' && t.name.startsWith(SWEEP_PREFIX)
+      );
+      if (idx >= 0) {
+        const [moved] = data.daily.tasks.splice(idx, 1);
+        moved.group = null;
+        moved.dueDay = 2;
+        moved.done = false;
+        moved.completedAt = null;
+        if (!data.weekly) data.weekly = { periodKey: '__manual_reset__', tasks: [] };
+        if (!data.weekly.tasks) data.weekly.tasks = [];
+        const dupe = data.weekly.tasks.some(t => t.name === moved.name);
+        if (!dupe) data.weekly.tasks.push(moved);
+      }
+    }
+    if (data.weekly?.tasks) {
+      data.weekly.tasks.forEach(t => {
+        if ((t.dueDay == null) && WEEKLY_DUE[t.name] != null) {
+          t.dueDay = WEEKLY_DUE[t.name];
+        }
+      });
+    }
+    data._version = '47';
+    return data;
+  },
+  '47': (data) => {
+    const WEEK_VALUES = ['week1', 'week2', 'week3', 'week4'];
+    const LEGACY_MAP = { early: 'week1', mid: 'week2', late: 'week4' };
+    if (data.monthly?.tasks) {
+      data.monthly.tasks.forEach(t => {
+        const v = t.dueDay;
+        if (v == null || WEEK_VALUES.includes(v)) return;
+        if (typeof v === 'string' && LEGACY_MAP[v]) {
+          t.dueDay = LEGACY_MAP[v];
+          return;
+        }
+        if (v === 'last') { t.dueDay = 'week4'; return; }
+        if (typeof v === 'number') {
+          t.dueDay = WEEK_VALUES[Math.min(3, Math.max(0, Math.floor((v - 1) / 7)))];
+          return;
+        }
+        t.dueDay = null;
+      });
+    }
+    data._version = '48';
     return data;
   },
 };
@@ -1142,7 +1302,13 @@ function getState(freq) {
       ? existing.filter(t => !t.adhoc).map(t => ({ ...t, done: false }))
       : DEFAULTS[freq].map(t => {
           const isObj = typeof t === 'object';
-          return { id: uid(), name: isObj ? t.name : t, priority: isObj ? t.priority : null, group: isObj ? (t.group ?? null) : null, done: false };
+          return {
+            id: uid(),
+            name: isObj ? t.name : t,
+            group: isObj ? (t.group ?? null) : null,
+            dueDay: isObj ? (t.dueDay ?? null) : null,
+            done: false,
+          };
         });
     const next = { periodKey: key, tasks };
     data[freq] = next;
@@ -1175,10 +1341,15 @@ function renderTask(task, list, accent, freq) {
     dateLabel = `<span class="completed-date">${fmtDate(task.completedAt)}</span>`;
   }
 
+  const due = dueDayInfo(freq, task);
+  const dueLabel = due.label
+    ? `<span class="due${due.status ? ' ' + due.status : ''}">${due.label}</span>`
+    : '';
+
   item.innerHTML = `
     <span class="task-name">${escHtml(task.name)}</span>
     ${dateLabel}
-    ${task.priority != null ? `<span class="priority priority-${task.priority}">${PRIORITY_LABEL[task.priority] ?? ''}</span>` : ''}
+    ${dueLabel}
   `;
   item.addEventListener('click', () => toggleTask(freq, task.id));
   item.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') toggleTask(freq, task.id); });
@@ -1216,33 +1387,10 @@ function render(freq) {
   const indexOf = new Map(tasks.map((t, i) => [t.id, i]));
   const sorted = [...tasks].sort((a, b) => {
     if (a.done !== b.done) return a.done ? 1 : -1;
-    const r = priorityRank(a.priority) - priorityRank(b.priority);
+    const r = dueDayInfo(freq, a).sortKey - dueDayInfo(freq, b).sortKey;
     if (r !== 0) return r;
     return indexOf.get(a.id) - indexOf.get(b.id);
   });
-
-  const hasGroups = sorted.some(t => t.group);
-
-  if (hasGroups) {
-    const groups = [
-      { key: 'weekday', label: 'Weekday' },
-      { key: 'weekend', label: 'Weekend' },
-    ];
-    groups.forEach(({ key, label }) => {
-      const groupTasks = sorted.filter(t => t.group === key);
-      if (!groupTasks.length) return;
-      const header = document.createElement('div');
-      header.className = 'subsection-header';
-      header.innerHTML = `
-        <span class="sub-col-label">Task</span>
-        <span class="sub-title">${label}</span>
-        <span class="sub-col-label right">Priority</span>
-      `;
-      list.appendChild(header);
-      groupTasks.forEach(task => renderTask(task, list, accent, freq));
-    });
-    return;
-  }
 
   sorted.forEach(task => renderTask(task, list, accent, freq));
 }
@@ -1363,8 +1511,8 @@ function copyTaskTo(name, targetFreq, group) {
   state.tasks.push({
     id: uid(),
     name,
-    priority: 'med',
     group: group ?? null,
+    dueDay: null,
     done: false,
     isCopy: true,
   });
@@ -1499,11 +1647,11 @@ function swapOrder(freq, taskId, dir, groupKey) {
   setState(freq, state);
 }
 
-function setTaskPriority(freq, taskId, priority) {
+function setTaskDueDay(freq, taskId, dueDay) {
   const state = getState(freq);
   const task = state.tasks.find(t => t.id === taskId);
   if (!task) return;
-  task.priority = priority;
+  task.dueDay = dueDay;
   setState(freq, state);
 }
 
@@ -1568,27 +1716,15 @@ function renderAdminTasks() {
       });
     };
 
-    if (freq === 'weekly') {
-      [{ key: 'weekday', label: 'Weekday' }, { key: 'weekend', label: 'Weekend' }].forEach(({ key, label }) => {
-        const groupTasks = tasks.filter(t => t.group === key);
-        if (!groupTasks.length) return;
-        const sub = document.createElement('div');
-        sub.className = 'admin-subgroup-header';
-        sub.textContent = label;
-        container.appendChild(sub);
-        renderList(groupTasks, key);
-      });
-    } else {
-      renderList(tasks, null);
-    }
+    renderList(tasks, null);
   });
 }
 
 // ── Action sheet ───────────────────────────────────────
 const SHEET_TARGETS = [
-  { freq: 'daily',  group: null,      label: 'Add to Daily' },
-  { freq: 'weekly', group: 'weekday', label: 'Add to Weekly (Weekday)' },
-  { freq: 'weekly', group: 'weekend', label: 'Add to Weekly (Weekend)' },
+  { freq: 'daily',   group: null, label: 'Add to Daily'   },
+  { freq: 'weekly',  group: null, label: 'Add to Weekly'  },
+  { freq: 'monthly', group: null, label: 'Add to Monthly' },
 ];
 
 function openActionSheet(task, sourceFreq) {
@@ -1597,30 +1733,55 @@ function openActionSheet(task, sourceFreq) {
   const opts = document.getElementById('sheet-options');
   opts.innerHTML = '';
 
-  const picker = document.createElement('div');
-  picker.className = 'priority-picker';
-  const options = [
-    { value: 'high', label: 'High' },
-    { value: 'med',  label: 'Med'  },
-    { value: 'low',  label: 'Low'  },
-    { value: null,   label: 'None' },
-  ];
-  options.forEach(opt => {
-    const btn = document.createElement('button');
-    btn.dataset.pri = opt.value ?? 'none';
-    btn.textContent = opt.label;
-    if ((task.priority ?? null) === opt.value) btn.classList.add('selected');
-    btn.addEventListener('click', () => {
-      setTaskPriority(sourceFreq, task.id, opt.value);
-      task.priority = opt.value;
-      picker.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      renderAdminTasks();
-      renderAll();
+  if (sourceFreq === 'weekly') {
+    const picker = document.createElement('div');
+    picker.className = 'dueday-picker';
+    const choices = [
+      { value: 0, label: 'Sun' }, { value: 1, label: 'Mon' }, { value: 2, label: 'Tue' },
+      { value: 3, label: 'Wed' }, { value: 4, label: 'Thu' }, { value: 5, label: 'Fri' },
+      { value: 6, label: 'Sat' }, { value: null, label: 'Any' },
+    ];
+    choices.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.textContent = opt.label;
+      if ((task.dueDay ?? null) === opt.value) btn.classList.add('selected');
+      btn.addEventListener('click', () => {
+        setTaskDueDay(sourceFreq, task.id, opt.value);
+        task.dueDay = opt.value;
+        picker.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        renderAdminTasks();
+        renderAll();
+      });
+      picker.appendChild(btn);
     });
-    picker.appendChild(btn);
-  });
-  opts.appendChild(picker);
+    opts.appendChild(picker);
+  } else if (sourceFreq === 'monthly') {
+    const picker = document.createElement('div');
+    picker.className = 'dueday-picker';
+    const choices = [
+      { value: 'week1', label: 'Week 1' },
+      { value: 'week2', label: 'Week 2' },
+      { value: 'week3', label: 'Week 3' },
+      { value: 'week4', label: 'Week 4' },
+      { value: null,    label: 'Any'    },
+    ];
+    choices.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.textContent = opt.label;
+      if ((task.dueDay ?? null) === opt.value) btn.classList.add('selected');
+      btn.addEventListener('click', () => {
+        setTaskDueDay(sourceFreq, task.id, opt.value);
+        task.dueDay = opt.value;
+        picker.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        renderAdminTasks();
+        renderAll();
+      });
+      picker.appendChild(btn);
+    });
+    opts.appendChild(picker);
+  }
 
   SHEET_TARGETS.forEach(t => {
     const tasksInTarget = load()[t.freq]?.tasks || [];
@@ -1675,13 +1836,6 @@ document.getElementById('sheet-cancel').addEventListener('click', closeActionShe
 document.getElementById('sheet-backdrop').addEventListener('click', closeActionSheet);
 
 // ── Add task (admin) ───────────────────────────────────
-document.querySelectorAll('input[name="new-freq"]').forEach(r => {
-  r.addEventListener('change', () => {
-    const sel = document.querySelector('input[name="new-freq"]:checked').value;
-    document.getElementById('weekly-group-picker').hidden = sel !== 'weekly';
-  });
-});
-
 document.getElementById('add-task-form').addEventListener('submit', e => {
   e.preventDefault();
   const nameInput = document.getElementById('add-task-name');
@@ -1689,16 +1843,13 @@ document.getElementById('add-task-form').addEventListener('submit', e => {
   if (!name) return;
   const freq = document.querySelector('input[name="new-freq"]:checked').value;
   const type = document.querySelector('input[name="new-type"]:checked').value;
-  const group = freq === 'weekly'
-    ? document.querySelector('input[name="new-wgroup"]:checked').value
-    : null;
 
   const state = getState(freq);
   state.tasks.push({
     id: uid(),
     name,
-    priority: 'med',
-    group,
+    group: null,
+    dueDay: null,
     done: false,
     adhoc: type === 'adhoc',
     isCopy: true,
